@@ -1,7 +1,8 @@
 # Theatre Bar HUD
 
 A volume overlay for a **Xiaomi Google TV** with a **Sony Bravia Theatre Bar 8** (HT-A8000) on eARC.
-Sony only shows the soundbar's volume number on its own TVs. On the Xiaomi you get no feedback at all. This app shows the soundbar's real volume in the TV's native vertical volume HUD, marked with a soundbar icon. It works over every input, including HDMI sources such as a PlayStation 5.
+Sony only shows the soundbar's volume number on its own TVs. On the Xiaomi you get no feedback at all. This app shows the soundbar's real volume in the TV's native vertical volume HUD, marked with a soundbar icon. It works over every input, including HDMI sources such as a PlayStation 5, and remembers the volume per
+app and HDMI input.
 
 - Android TV / Google TV, API 30+, ~220 KB, no network access, no special permissions
 - Tested on Xiaomi `MiTV-MOEU0` (Android 14, firmware V816.0.26.3.19) with HT-A8000
@@ -41,6 +42,24 @@ Accessibility key filter ──► HUD: predicted value instantly, corrected by 
    and parked at alpha 0 when hidden. The compositor skips it, but the GPU pipeline stays warm, so showing it
    costs a single frame.
 
+## Volume per input
+
+Streaming apps come out at very different loudness. The app remembers the soundbar volume you settle on in each
+input and restores it when you switch there:
+
+- **Input detection:** [`ForegroundInputTracker`](app/src/main/java/dev/heynol/barhud/service/ForegroundInputTracker.kt)
+  uses accessibility window-state events (package name only). Launchable TV apps count as inputs (`app:com.netflix.ninja`).
+  All HDMI inputs run inside Xiaomi's LiveTV app, so for LiveTV the port comes from the `TvSourcesStatus` global
+  setting (`hdmi1|HDR10` → `hdmi:hdmi1`). Overlays such as quick settings or the assistant keep the current input.
+  The home screen isn't an input, so nothing is learned or restored there.
+- **Learning:** every volume the soundbar settles at while an input is in front is stored for that input,
+  including changes made with the soundbar remote.
+- **Restoring:** in adjust-only absolute volume mode Android ignores `setStreamVolume`, so the controller walks
+  the soundbar to the target with `adjustStreamVolume`, one CEC step at a time. Each step waits for the next
+  `<Report Audio Status>` (~2–3 steps/s). The walk starts 1.5 s after the switch, so zapping through inputs changes
+  nothing. Any volume key press cancels it, and it is skipped while muted. The HUD shows the steps.
+- The setup screen lists the stored volumes, and you can switch the feature off or forget all values.
+
 ## Install
 
 On the TV: Settings → System → About → click *Android TV OS build* 7× → Developer options → enable
@@ -72,7 +91,8 @@ adb shell settings put secure enabled_accessibility_services dev.heynol.barhud/d
 Alternatively, open *Theatre Bar HUD* from the launcher. The setup screen links to Accessibility settings and shows
 whether the soundbar is connected. On a sideloaded app you may first need App info → *Allow restricted settings*.
 
-The service is bound by the system at boot and after app updates. Wireless debugging is only needed for
+The service is bound by the system at boot and after app updates. *Clear data* in App info unbinds it,
+so enable it again afterwards. Wireless debugging is only needed for
 installing and can be switched off afterwards.
 
 ## Tuning

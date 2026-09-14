@@ -8,6 +8,7 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import dev.heynol.barhud.hud.HudOverlay
+import dev.heynol.barhud.volume.InputVolumeMemory
 import dev.heynol.barhud.volume.TvVolumeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,20 +17,23 @@ import kotlinx.coroutines.cancel
 import java.lang.ref.WeakReference
 
 /**
- * Observes the remote's volume keys. Every key is passed through untouched, so the TV keeps
- * controlling the soundbar over eARC/CEC; the service only watches.
+ * Observes the remote's volume keys and which app or HDMI input is in front. Every key is passed
+ * through untouched, so the TV keeps controlling the soundbar over eARC/CEC.
  */
 class VolumeKeyService : AccessibilityService() {
 
     private var scope: CoroutineScope? = null
     private var hud: HudOverlay? = null
     private var controller: VolumeController? = null
+    private var inputTracker: ForegroundInputTracker? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).also { scope = it }
         val hud = HudOverlay(this).also { hud = it }
-        controller = VolumeController(TvVolumeSource(this), hud, scope).also { it.start() }
+        val controller = VolumeController(TvVolumeSource(this), InputVolumeMemory(this), hud, scope)
+            .also { controller = it; it.start() }
+        inputTracker = ForegroundInputTracker(this, controller::onInputChanged).also { it.start() }
         instance = WeakReference(this)
     }
 
@@ -53,12 +57,15 @@ class VolumeKeyService : AccessibilityService() {
         hud?.reloadContent() // system theme / density may have changed the native HUD resources
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        event?.let { inputTracker?.onAccessibilityEvent(it) }
+    }
 
     override fun onInterrupt() = Unit
 
     override fun onDestroy() {
         instance = null
+        inputTracker?.stop()
         controller?.stop()
         hud?.release()
         scope?.cancel()

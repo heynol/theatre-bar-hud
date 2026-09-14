@@ -12,6 +12,13 @@
     <string name="step_soundbar_title">3 · Soundbar</string>
     <string name="step_soundbar_body">Die Lautstärke kommt direkt von der Soundbar über HDMI eARC (CEC). Nichts einzurichten – die Soundbar muss nur eingeschaltet sein.</string>
 
+    <string name="step_input_volume_title">4 · Lautstärke pro Eingang</string>
+    <string name="step_input_volume_body">Merkt sich die Soundbar-Lautstärke, die du in jeder App und an jedem HDMI-Eingang einstellst (YouTube, Netflix, PlayStation …), und stellt sie beim Wechsel wieder her. Ein Druck auf eine Lautstärketaste bricht die Anpassung ab.</string>
+    <string name="input_volume_switch">Lautstärke pro Eingang merken</string>
+    <string name="input_volume_empty">Noch nichts gespeichert. Stell einfach in einer App die gewünschte Lautstärke ein.</string>
+    <string name="input_volume_entry">%1$s: %2$d</string>
+    <string name="action_forget_volumes">Alle vergessen</string>
+
     <string name="status_enabled">✓ Aktiv</string>
     <string name="status_disabled">Nicht aktiv</string>
     <string name="status_granted">✓ Erlaubt</string>

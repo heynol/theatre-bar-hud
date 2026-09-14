@@ -32,6 +32,7 @@ class TvVolumeSource(private val context: Context) {
     private val handler = Handler(Looper.getMainLooper())
     private var listener: ((VolumeState) -> Unit)? = null
     private var lastAudibleVolume = 0
+    private var lastNotified: VolumeState? = null
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -82,6 +83,18 @@ class TvVolumeSource(private val context: Context) {
         )
     }
 
+    /**
+     * One volume step up (+1) or down (-1). With adjust-only absolute volume this goes to the
+     * soundbar as CEC `<User Control Pressed>`; `setStreamVolume` is ignored in that mode.
+     */
+    fun adjust(direction: Int) {
+        audioManager.adjustStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            if (direction > 0) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
+            0,
+        )
+    }
+
     /** True while media plays through an HDMI ARC/eARC audio system (the soundbar is on). */
     fun isSoundbarActive(): Boolean {
         val devices = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -97,14 +110,12 @@ class TvVolumeSource(private val context: Context) {
         }
     }
 
-    /** Human-readable name of the current media output, for the setup screen. */
-    fun outputName(): String? =
-        audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-            .firstOrNull { it.type in HDMI_AUDIO_SYSTEM_TYPES }
-            ?.productName?.toString()?.takeIf { it.isNotBlank() }
-
+    /** The broadcast and the settings observer both fire for one change; report it once. */
     private fun notifyListener() {
-        listener?.invoke(read())
+        val state = read()
+        if (state == lastNotified) return
+        lastNotified = state
+        listener?.invoke(state)
     }
 
     private companion object {

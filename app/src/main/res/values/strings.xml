@@ -13,6 +13,13 @@
     <string name="step_soundbar_title">3 · Soundbar</string>
     <string name="step_soundbar_body">The volume comes from the soundbar itself via HDMI eARC (CEC). Nothing to configure; the soundbar just has to be on.</string>
 
+    <string name="step_input_volume_title">4 · Volume per input</string>
+    <string name="step_input_volume_body">Remembers the soundbar volume you set in each app and HDMI input (YouTube, Netflix, PlayStation …) and restores it when you switch there. Pressing a volume key during the adjustment stops it.</string>
+    <string name="input_volume_switch">Remember volume per input</string>
+    <string name="input_volume_empty">Nothing remembered yet. Just set the volume you like in an app.</string>
+    <string name="input_volume_entry">%1$s: %2$d</string>
+    <string name="action_forget_volumes">Forget all</string>
+
     <string name="status_enabled">✓ Enabled</string>
     <string name="status_disabled">Not enabled</string>
     <string name="status_granted">✓ Granted</string>
