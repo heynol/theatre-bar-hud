@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Theatre Bar HUD</string>
+    <string name="accessibility_service_label">Theatre Bar volume overlay</string>
+    <string name="accessibility_service_description">Watches the remote\'s volume and mute keys and shows the soundbar\'s real volume on screen. Key presses are passed through unchanged; nothing else is read.</string>
+
+    <string name="setup_subtitle">Shows your soundbar\'s real volume whenever you press volume on the remote.</string>
+
+    <string name="step_accessibility_title">1 · Volume key access</string>
+    <string name="step_accessibility_body">Enable \"Theatre Bar volume overlay\" under Accessibility. If the switch is greyed out, open App info for this app and choose \"Allow restricted settings\" first.</string>
+    <string name="step_overlay_title">2 · Draw over other apps (optional)</string>
+    <string name="step_overlay_body">Only used as a fallback. Many Android TV builds hide this screen.</string>
+    <string name="step_soundbar_title">3 · Soundbar</string>
+    <string name="step_soundbar_body">The volume comes from the soundbar itself via HDMI eARC (CEC). Nothing to configure; the soundbar just has to be on.</string>
+
+    <string name="status_enabled">✓ Enabled</string>
+    <string name="status_disabled">Not enabled</string>
+    <string name="status_granted">✓ Granted</string>
+    <string name="status_not_granted">Not granted</string>
+    <string name="status_soundbar_active">✓ %1$s connected · volume %2$d%3$s</string>
+    <string name="status_soundbar_muted"> · muted</string>
+    <string name="status_soundbar_inactive">No soundbar active. Turn it on and play something through it.</string>
+    <string name="soundbar_generic_name" translatable="false">Soundbar</string>
+
+    <string name="action_open_settings">Open settings</string>
+    <string name="action_grant">Grant</string>
+    <string name="action_preview">Preview overlay</string>
+
+    <string name="toast_settings_missing">This TV hides that screen. Use the adb command from the README.</string>
+    <string name="toast_service_not_running">Enable volume key access first.</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label">Theatre-Bar-Lautstärkeanzeige</string>
+    <string name="accessibility_service_description">Beobachtet die Lautstärke- und Stummtasten der Fernbedienung und zeigt die echte Lautstärke der Soundbar an. Tastendrücke werden unverändert weitergegeben; sonst wird nichts gelesen.</string>
+
+    <string name="setup_subtitle">Zeigt die echte Lautstärke deiner Soundbar an, sobald du auf der Fernbedienung lauter oder leiser drückst.</string>
+
+    <string name="step_accessibility_title">1 · Zugriff auf Lautstärketasten</string>
+    <string name="step_accessibility_body">Unter Bedienungshilfen „Theatre-Bar-Lautstärkeanzeige“ einschalten. Ist der Schalter ausgegraut, zuerst in den App-Infos „Eingeschränkte Einstellungen zulassen“ wählen.</string>
+    <string name="step_overlay_title">2 · Über anderen Apps einblenden (optional)</string>
+    <string name="step_overlay_body">Nur als Ausweichlösung. Viele Android-TV-Geräte blenden diese Einstellung aus.</string>
+    <string name="step_soundbar_title">3 · Soundbar</string>
+    <string name="step_soundbar_body">Die Lautstärke kommt direkt von der Soundbar über HDMI eARC (CEC). Nichts einzurichten – die Soundbar muss nur eingeschaltet sein.</string>
+
+    <string name="status_enabled">✓ Aktiv</string>
+    <string name="status_disabled">Nicht aktiv</string>
+    <string name="status_granted">✓ Erlaubt</string>
+    <string name="status_not_granted">Nicht erlaubt</string>
+    <string name="status_soundbar_active">✓ %1$s verbunden · Lautstärke %2$d%3$s</string>
+    <string name="status_soundbar_muted"> · stumm</string>
+    <string name="status_soundbar_inactive">Keine Soundbar aktiv. Einschalten und etwas darüber abspielen.</string>
+
+    <string name="action_open_settings">Einstellungen öffnen</string>
+    <string name="action_grant">Erlauben</string>
+    <string name="action_preview">Anzeige testen</string>
+
+    <string name="toast_settings_missing">Dieser Fernseher blendet die Einstellung aus. Nutze den adb-Befehl aus der README.</string>
+    <string name="toast_service_not_running">Zuerst den Zugriff auf die Lautstärketasten aktivieren.</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soundbar glyph: marks this HUD apart from the TV's own speaker HUD. Same 19dp box and
+     weight as TvSystemUI's mi_ic_vol_vertical. Grille holes are cut out via evenOdd. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="19dp" android:height="19dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M3,6.5h18a2.5,2.5 0,0 1,2.5 2.5v6a2.5,2.5 0,0 1,-2.5 2.5h-18a2.5,2.5 0,0 1,-2.5 -2.5v-6a2.5,2.5 0,0 1,2.5 -2.5z
+            M5.5,10.4a1.6,1.6 0,1 0,0 3.2a1.6,1.6 0,1 0,0 -3.2z
+            M9.83,10.4a1.6,1.6 0,1 0,0 3.2a1.6,1.6 0,1 0,0 -3.2z
+            M14.17,10.4a1.6,1.6 0,1 0,0 3.2a1.6,1.6 0,1 0,0 -3.2z
+            M18.5,10.4a1.6,1.6 0,1 0,0 3.2a1.6,1.6 0,1 0,0 -3.2z" />
+</vector>
