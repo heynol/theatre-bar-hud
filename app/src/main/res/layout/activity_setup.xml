@@ -200,6 +200,70 @@
                 android:text="@string/action_forget_volumes" />
         </LinearLayout>
 
+        <!-- Step 5: remote -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/setup_card"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                style="@style/SetupStepTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/step_remote_title" />
+
+            <Switch
+                android:id="@+id/ownVolumeKeysSwitch"
+                style="@style/SetupButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:switchPadding="16dp"
+                android:text="@string/own_volume_keys_switch" />
+
+            <TextView
+                style="@style/SetupBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/own_volume_keys_body" />
+
+            <Switch
+                android:id="@+id/undoDoubleDownMuteSwitch"
+                style="@style/SetupButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:switchPadding="16dp"
+                android:text="@string/undo_double_down_mute_switch" />
+
+            <TextView
+                style="@style/SetupBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/undo_double_down_mute_body" />
+
+            <Switch
+                android:id="@+id/netflixButtonSwitch"
+                style="@style/SetupButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:switchPadding="16dp"
+                android:text="@string/netflix_button_switch" />
+
+            <TextView
+                style="@style/SetupBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/netflix_button_body" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/previewButton"
             style="@style/SetupButton"

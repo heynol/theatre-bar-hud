@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import dev.heynol.barhud.R
 import dev.heynol.barhud.service.ForegroundInputTracker
+import dev.heynol.barhud.service.RemoteSettings
 import dev.heynol.barhud.service.VolumeKeyService
 import dev.heynol.barhud.volume.InputVolumeMemory
 import dev.heynol.barhud.volume.TvVolumeSource
@@ -33,6 +34,7 @@ class SetupActivity : Activity() {
     private lateinit var inputVolumeSwitch: Switch
     private lateinit var inputVolumeList: TextView
     private lateinit var forgetVolumesButton: Button
+    private lateinit var remoteSettings: RemoteSettings
 
     private val memoryListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> updateInputVolumes() }
 
@@ -41,6 +43,7 @@ class SetupActivity : Activity() {
         setContentView(R.layout.activity_setup)
         volumeSource = TvVolumeSource(this)
         memory = InputVolumeMemory(this)
+        remoteSettings = RemoteSettings(this)
 
         accessibilityStatus = findViewById(R.id.accessibilityStatus)
         accessibilityButton = findViewById(R.id.accessibilityButton)
@@ -54,6 +57,19 @@ class SetupActivity : Activity() {
 
         inputVolumeSwitch.setOnCheckedChangeListener { _, checked -> memory.enabled = checked }
         forgetVolumesButton.setOnClickListener { memory.clear() }
+
+        findViewById<Switch>(R.id.ownVolumeKeysSwitch).apply {
+            isChecked = remoteSettings.ownVolumeKeys
+            setOnCheckedChangeListener { _, checked -> remoteSettings.ownVolumeKeys = checked }
+        }
+        findViewById<Switch>(R.id.undoDoubleDownMuteSwitch).apply {
+            isChecked = remoteSettings.undoDoubleDownMute
+            setOnCheckedChangeListener { _, checked -> remoteSettings.undoDoubleDownMute = checked }
+        }
+        findViewById<Switch>(R.id.netflixButtonSwitch).apply {
+            isChecked = remoteSettings.netflixButton
+            setOnCheckedChangeListener { _, checked -> remoteSettings.netflixButton = checked }
+        }
 
         accessibilityButton.setOnClickListener {
             openSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))

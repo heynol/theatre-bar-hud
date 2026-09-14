@@ -15,7 +15,7 @@ Remote ─► TV ──HDMI-CEC <User Control Pressed>──► Soundbar
  │        AudioService  ◄─ <Report Audio Status> ──┘   (volume 0–100 + mute bit)
  │             │ STREAM_MUSIC index for hdmi_earc
  ▼             ▼
-Accessibility key filter ──► HUD: predicted value instantly, corrected by the reported value
+AudioService / VOLUME_CHANGED ──► HUD (~0.3–0.5 s after the key press)
 ```
 
 1. **Volume source (no network).** With an eARC audio system Android 14 uses *adjust-only absolute
@@ -24,11 +24,11 @@ Accessibility key filter ──► HUD: predicted value instantly, corrected by 
    [`TvVolumeSource`](app/src/main/java/dev/heynol/barhud/volume/TvVolumeSource.kt) reads it through
    `AudioManager` and listens for `VOLUME_CHANGED_ACTION`. Changes made on the soundbar remote or in the
    Bravia Connect app show up as well.
-2. **Instant feedback.** [`VolumeKeyService`](app/src/main/java/dev/heynol/barhud/service/VolumeKeyService.kt)
-   is an accessibility service that watches volume up, volume down and mute. Keys are passed through
-   unchanged. The first press of a key immediately shows "last volume ± 1", and the value reported over CEC
-   (~0.3–0.5 s later) corrects it. While keys are still arriving, reports are held back, so the bar never
-   jumps backwards.
+2. **Feedback timing.** On the Xiaomi, volume keys never reach
+   [`VolumeKeyService`](app/src/main/java/dev/heynol/barhud/service/VolumeKeyService.kt)'s accessibility key
+   filter: Xiaomi's `MitvAudioService` handles them earlier. So the HUD follows the soundbar's reported value,
+   ~0.3–0.5 s after a press. On devices where the filter does get the keys, the first press immediately shows
+   "last volume ± 1" and the report corrects it. While keys are still arriving, reports are held back.
 3. **Soundbar only.** The HUD appears only while media audio is routed to HDMI ARC/eARC. With TV speakers
    the native HUD stays in charge.
 4. **Native look.** [`HudContent`](app/src/main/java/dev/heynol/barhud/hud/HudContent.kt) inflates TvSystemUI's
@@ -59,6 +59,20 @@ input and restores it when you switch there:
   `<Report Audio Status>` (~2–3 steps/s). The walk starts 1.5 s after the switch, so zapping through inputs changes
   nothing. Any volume key press cancels it, and it is skipped while muted. The HUD shows the steps.
 - The setup screen lists the stored volumes, and you can switch the feature off or forget all values.
+
+## Remote workarounds
+
+Setup screen, section 5. All are on by default.
+
+- **Undo mute from pressing "down" twice.** Xiaomi's `MitvAudioService` mutes 360 ms after two "volume down"
+  presses within 750 ms, and there is no setting for it. A report that turns mute on within 1.5 s of the volume
+  going down is undone at once (`ADJUST_UNMUTE`, again over CEC). Sound drops for about a second. The mute key
+  on its own is left alone. If you press mute right after turning the volume down, that mute is undone too.
+- **Netflix button.** Google TV remotes (e.g. from a Google TV Streamer paired to the TV) send `BUTTON_4` for
+  Netflix. Xiaomi's firmware ignores it, so the service consumes it and launches `com.netflix.ninja`.
+- **Handle volume keys in this app.** Consumes volume up/down while the soundbar is active, applies them with
+  `adjustStreamVolume` and repeats held keys one confirmed step at a time. This only works where volume keys
+  reach accessibility filters. On the tested Xiaomi they don't, so it has no effect there.
 
 ## Install
 
@@ -103,7 +117,8 @@ installing and can be switched off afterwards.
 
 ## Known limitations
 
-- **Holding a volume key** moves the soundbar only a couple of steps. That's the TV's CEC handling, not the app,
-  since keys are passed through untouched. Repeated presses work normally.
+- **Holding a volume key** moves the soundbar only two steps: `MitvAudioService` sends one step on key down and
+  one on key up, nothing in between. Apps can't intercept these keys on the Xiaomi (see above). Repeated presses
+  work normally.
 - `adb shell input keyevent` bypasses accessibility filters. Injected keys still change the volume and the HUD
   follows the reported value, but without the instant prediction.

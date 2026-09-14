@@ -95,6 +95,11 @@ class TvVolumeSource(private val context: Context) {
         )
     }
 
+    /** Unmutes the media stream; goes to the soundbar over CEC like [adjust]. */
+    fun unmute() {
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE, 0)
+    }
+
     /** True while media plays through an HDMI ARC/eARC audio system (the soundbar is on). */
     fun isSoundbarActive(): Boolean {
         val devices = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
