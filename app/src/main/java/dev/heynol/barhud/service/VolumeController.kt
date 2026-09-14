@@ -3,7 +3,6 @@ package dev.heynol.barhud.service
 import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
-import android.view.ViewConfiguration
 import dev.heynol.barhud.hud.HudOverlay
 import dev.heynol.barhud.volume.InputVolumeMemory
 import dev.heynol.barhud.volume.TvVolumeSource
@@ -33,7 +32,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 class VolumeController(
     private val source: TvVolumeSource,
     private val memory: InputVolumeMemory,
-    private val remoteSettings: RemoteSettings,
     private val hud: HudOverlay,
     private val scope: CoroutineScope,
 ) {
@@ -43,8 +41,6 @@ class VolumeController(
     private var settleJob: Job? = null
 
     private val downKeys = HashSet<Int>()
-    private val consumedKeys = HashSet<Int>()
-    private var holdJob: Job? = null
 
     private var input: String? = null
     private var restoreJob: Job? = null
@@ -60,75 +56,40 @@ class VolumeController(
         source.stop()
         settleJob?.cancel()
         restoreJob?.cancel()
-        holdJob?.cancel()
     }
 
     /**
-     * Every ACTION_DOWN from the accessibility key filter, including repeats. Returns true if the
-     * key is consumed.
+     * Every ACTION_DOWN from the accessibility key filter, where the platform delivers volume keys
+     * to it (not on Xiaomi, see [VolumeKeyService]). Keys are never consumed.
      *
-     * While the soundbar is active and [RemoteSettings.ownVolumeKeys] is on, volume up/down are
-     * consumed and applied here with `adjustStreamVolume` (the same CEC path). Passed through,
-     * they'd reach Xiaomi's MitvAudioService, which mutes on a quick double "down" and only acts
-     * on a few repeats of a held key. Mute is always passed through.
-     *
-     * Only the first DOWN of a press is predicted; a held key then steps once per soundbar report
-     * (see [holdVolumeKey]). A DOWN for a key that is already down is a repeat from the remote.
+     * Only the first DOWN of a press is predicted. A held key is paced by the TV, which waits for
+     * each `<Report Audio Status>` before sending the next step, while the remote repeats far
+     * faster. Predicting repeats would run ahead of the soundbar and then snap back, so during a
+     * hold the HUD just stays up and shows the reported values live.
      */
-    fun onVolumeKeyDown(keyCode: Int): Boolean {
+    fun onVolumeKeyDown(keyCode: Int) {
         val repeat = !downKeys.add(keyCode)
-        if (repeat) {
-            if (keyCode != KeyEvent.KEYCODE_VOLUME_MUTE && source.isSoundbarActive()) hud.show(state)
-            return keyCode in consumedKeys
-        }
-        // TV speakers have their own native HUD and key handling; only stand in for the soundbar.
-        if (!source.isSoundbarActive()) return false
+        // TV speakers have their own native HUD; only stand in for the soundbar.
+        if (!source.isSoundbarActive()) return
         cancelRestore("volume key") // the user takes over
+        if (repeat) {
+            if (keyCode != KeyEvent.KEYCODE_VOLUME_MUTE) hud.show(state)
+            return
+        }
 
         lastKeyAt = SystemClock.uptimeMillis()
         val current = state ?: source.read()
-        val direction = when (keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP -> 1
-            KeyEvent.KEYCODE_VOLUME_DOWN -> -1
-            else -> 0
+        val predicted = when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> current.stepped(+1)
+            KeyEvent.KEYCODE_VOLUME_DOWN -> current.stepped(-1)
+            else -> current.copy(muted = !current.muted)
         }
-        val predicted = if (direction == 0) current.copy(muted = !current.muted) else current.stepped(direction)
         state = predicted
         hud.show(predicted)
-
-        if (direction == 0 || !remoteSettings.ownVolumeKeys) return false
-        consumedKeys += keyCode
-        source.adjust(direction)
-        holdJob?.cancel()
-        holdJob = scope.launch { holdVolumeKey(keyCode, direction, pressedAt = current.volume) }
-        return true
     }
 
-    /** Returns true if the matching DOWN was consumed; an UP must follow its DOWN. */
-    fun onVolumeKeyUp(keyCode: Int): Boolean {
+    fun onVolumeKeyUp(keyCode: Int) {
         downKeys -= keyCode
-        if (downKeys.isEmpty()) {
-            holdJob?.cancel()
-            reportWaiter = null
-        }
-        return consumedKeys.remove(keyCode)
-    }
-
-    /** A held key keeps stepping, each step as soon as the soundbar reported the previous one. */
-    private suspend fun holdVolumeKey(keyCode: Int, direction: Int, pressedAt: Int) {
-        delay(ViewConfiguration.getKeyRepeatTimeout().toLong())
-        // Don't run ahead of the soundbar: start repeating only once the first step is confirmed.
-        var volume = source.read().volume
-        if (volume == pressedAt) volume = awaitReport { it.volume != pressedAt }?.volume ?: return
-        var steps = 0
-        while (keyCode in downKeys && steps++ < MAX_HOLD_STEPS) {
-            val before = volume
-            val limit = if (direction > 0) state?.maxVolume ?: Int.MAX_VALUE else state?.minVolume ?: 0
-            if (before == limit) return
-            source.adjust(direction)
-            volume = awaitReport { it.volume != before }?.volume ?: return
-            delay(HOLD_STEP_MIN_INTERVAL_MS)
-        }
     }
 
     fun onInputChanged(newInput: String?) {
@@ -242,7 +203,5 @@ class VolumeController(
         const val MAX_RESTORE_PASSES = 3
         const val VERIFY_DELAY_MS = 800L
         const val RESTORE_GRACE_MS = 1_500L
-        const val MAX_HOLD_STEPS = 100
-        const val HOLD_STEP_MIN_INTERVAL_MS = 80L
     }
 }

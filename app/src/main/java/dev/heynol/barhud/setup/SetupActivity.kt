@@ -58,10 +58,6 @@ class SetupActivity : Activity() {
         inputVolumeSwitch.setOnCheckedChangeListener { _, checked -> memory.enabled = checked }
         forgetVolumesButton.setOnClickListener { memory.clear() }
 
-        findViewById<Switch>(R.id.ownVolumeKeysSwitch).apply {
-            isChecked = remoteSettings.ownVolumeKeys
-            setOnCheckedChangeListener { _, checked -> remoteSettings.ownVolumeKeys = checked }
-        }
         findViewById<Switch>(R.id.netflixButtonSwitch).apply {
             isChecked = remoteSettings.netflixButton
             setOnCheckedChangeListener { _, checked -> remoteSettings.netflixButton = checked }

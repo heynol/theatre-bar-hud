@@ -21,10 +21,8 @@
     <string name="action_forget_volumes">Forget all</string>
 
     <string name="step_remote_title">5 · Remote</string>
-    <string name="own_volume_keys_switch">Handle volume keys in this app</string>
-    <string name="own_volume_keys_body">While the soundbar is on, volume up/down are applied by this app instead of the TV. No accidental mute on a quick double "down", and holding a key keeps changing the volume. Mute stays on the mute key.</string>
     <string name="netflix_button_switch">Netflix button opens Netflix</string>
-    <string name="netflix_button_body">For Google TV remotes, whose Netflix button the TV otherwise ignores.</string>
+    <string name="netflix_button_body">For Google TV remotes, whose Netflix button the TV otherwise ignores. Side effect on Xiaomi TVs: while this is on, a single \"volume down\" can occasionally be taken as a double press and mute the soundbar.</string>
 
     <string name="status_enabled">✓ Enabled</string>
     <string name="status_disabled">Not enabled</string>

@@ -1,10 +1,12 @@
 package dev.heynol.barhud.service
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.provider.Settings
 import android.util.Log
@@ -20,11 +22,14 @@ import kotlinx.coroutines.cancel
 import java.lang.ref.WeakReference
 
 /**
- * Filters the remote's keys and watches which app or HDMI input is in front.
+ * Watches the soundbar volume and which app or HDMI input is in front, and optionally maps the
+ * Netflix button of Google TV remotes.
  *
- * Volume keys go to [VolumeController] (applied by us while the soundbar is active, otherwise
- * passed through). The Netflix button of Google TV remotes opens Netflix. Everything else is
- * passed through untouched.
+ * Key filtering is only requested while that Netflix mapping is on. Once any service filters
+ * keys, Android's KeyboardInterceptor runs the window policy's `interceptKeyBeforeDispatching` for
+ * volume keys ahead of normal dispatch. Xiaomi's MitvAudioService counts volume key events there,
+ * so one press can be seen twice and trigger its "double down = mute". On Xiaomi the volume keys
+ * never reach [onKeyEvent] either way (the policy consumes them in that early call).
  */
 class VolumeKeyService : AccessibilityService() {
 
@@ -33,13 +38,16 @@ class VolumeKeyService : AccessibilityService() {
     private var controller: VolumeController? = null
     private var inputTracker: ForegroundInputTracker? = null
     private var remoteSettings: RemoteSettings? = null
+    private val remoteSettingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> applyKeyFiltering() }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).also { scope = it }
         val hud = HudOverlay(this).also { hud = it }
         val remoteSettings = RemoteSettings(this).also { remoteSettings = it }
-        val controller = VolumeController(TvVolumeSource(this), InputVolumeMemory(this), remoteSettings, hud, scope)
+        remoteSettings.registerListener(remoteSettingsListener)
+        applyKeyFiltering()
+        val controller = VolumeController(TvVolumeSource(this), InputVolumeMemory(this), hud, scope)
             .also { controller = it; it.start() }
         inputTracker = ForegroundInputTracker(this, controller::onInputChanged).also { it.start() }
         instance = WeakReference(this)
@@ -50,8 +58,8 @@ class VolumeKeyService : AccessibilityService() {
             val controller = controller
             when {
                 controller == null -> false
-                event.action == KeyEvent.ACTION_DOWN -> controller.onVolumeKeyDown(event.keyCode)
-                event.action == KeyEvent.ACTION_UP -> controller.onVolumeKeyUp(event.keyCode)
+                event.action == KeyEvent.ACTION_DOWN -> false.also { controller.onVolumeKeyDown(event.keyCode) }
+                event.action == KeyEvent.ACTION_UP -> false.also { controller.onVolumeKeyUp(event.keyCode) }
                 else -> false
             }
         }
@@ -59,19 +67,33 @@ class VolumeKeyService : AccessibilityService() {
         else -> false
     }
 
+    private fun applyKeyFiltering() {
+        val info = serviceInfo ?: return
+        val filter = AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+        val flags = if (remoteSettings?.netflixButton == true) info.flags or filter else info.flags and filter.inv()
+        if (flags != info.flags) {
+            info.flags = flags
+            serviceInfo = info
+            Log.i(TAG, "key filtering ${if (flags and filter != 0) "on" else "off"}")
+        }
+    }
+
     /** Google TV remotes label BUTTON_4 "Netflix" (Vendor_18d1_Product_9451.kl). */
     private fun onNetflixButton(event: KeyEvent): Boolean {
         if (remoteSettings?.netflixButton != true) return false
-        val launch = packageManager.getLeanbackLaunchIntentForPackage(NETFLIX_PACKAGE) ?: return false
-        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-            try {
-                // Bound accessibility services may start activities from the background.
-                startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED))
-            } catch (e: ActivityNotFoundException) {
-                Log.w(TAG, "Netflix not launchable", e)
-            }
-        }
+        if (packageManager.getLeanbackLaunchIntentForPackage(NETFLIX_PACKAGE) == null) return false
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) launchNetflix()
         return true
+    }
+
+    private fun launchNetflix() {
+        val launch = packageManager.getLeanbackLaunchIntentForPackage(NETFLIX_PACKAGE) ?: return
+        try {
+            // Bound accessibility services may start activities from the background.
+            startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED))
+        } catch (e: ActivityNotFoundException) {
+            Log.w(TAG, "Netflix not launchable", e)
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -87,6 +109,7 @@ class VolumeKeyService : AccessibilityService() {
 
     override fun onDestroy() {
         instance = null
+        remoteSettings?.unregisterListener(remoteSettingsListener)
         inputTracker?.stop()
         controller?.stop()
         hud?.release()

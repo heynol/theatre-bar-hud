@@ -215,28 +215,13 @@
                 android:layout_height="wrap_content"
                 android:text="@string/step_remote_title" />
 
-            <Switch
-                android:id="@+id/ownVolumeKeysSwitch"
-                style="@style/SetupButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:switchPadding="16dp"
-                android:text="@string/own_volume_keys_switch" />
-
-            <TextView
-                style="@style/SetupBody"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/own_volume_keys_body" />
 
             <Switch
                 android:id="@+id/netflixButtonSwitch"
                 style="@style/SetupButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:switchPadding="16dp"
                 android:text="@string/netflix_button_switch" />
 

@@ -11,20 +11,20 @@ class RemoteSettings(context: Context) {
         context.applicationContext.getSharedPreferences("remote", Context.MODE_PRIVATE)
 
     /**
-     * Handle volume up/down ourselves while the soundbar is active, instead of passing them to
-     * Xiaomi's key handling (which mutes on a quick double "down" and barely repeats when held).
+     * Netflix button of Google TV remotes (`BUTTON_4`), which Xiaomi's firmware ignores. Needs
+     * accessibility key filtering, which has a side effect on Xiaomi; see [VolumeKeyService].
      */
-    var ownVolumeKeys: Boolean
-        get() = prefs.getBoolean(KEY_OWN_VOLUME_KEYS, true)
-        set(value) = prefs.edit { putBoolean(KEY_OWN_VOLUME_KEYS, value) }
-
-    /** Netflix button of Google TV remotes (`BUTTON_4`), which Xiaomi's firmware ignores. */
     var netflixButton: Boolean
-        get() = prefs.getBoolean(KEY_NETFLIX_BUTTON, true)
+        get() = prefs.getBoolean(KEY_NETFLIX_BUTTON, false)
         set(value) = prefs.edit { putBoolean(KEY_NETFLIX_BUTTON, value) }
 
+    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) =
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+
+    fun unregisterListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) =
+        prefs.unregisterOnSharedPreferenceChangeListener(listener)
+
     private companion object {
-        const val KEY_OWN_VOLUME_KEYS = "own_volume_keys"
         const val KEY_NETFLIX_BUTTON = "netflix_button"
     }
 }
