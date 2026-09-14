@@ -62,10 +62,6 @@ class SetupActivity : Activity() {
             isChecked = remoteSettings.ownVolumeKeys
             setOnCheckedChangeListener { _, checked -> remoteSettings.ownVolumeKeys = checked }
         }
-        findViewById<Switch>(R.id.undoDoubleDownMuteSwitch).apply {
-            isChecked = remoteSettings.undoDoubleDownMute
-            setOnCheckedChangeListener { _, checked -> remoteSettings.undoDoubleDownMute = checked }
-        }
         findViewById<Switch>(R.id.netflixButtonSwitch).apply {
             isChecked = remoteSettings.netflixButton
             setOnCheckedChangeListener { _, checked -> remoteSettings.netflixButton = checked }

@@ -232,22 +232,6 @@
                 android:text="@string/own_volume_keys_body" />
 
             <Switch
-                android:id="@+id/undoDoubleDownMuteSwitch"
-                style="@style/SetupButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:switchPadding="16dp"
-                android:text="@string/undo_double_down_mute_switch" />
-
-            <TextView
-                style="@style/SetupBody"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/undo_double_down_mute_body" />
-
-            <Switch
                 android:id="@+id/netflixButtonSwitch"
                 style="@style/SetupButton"
                 android:layout_width="wrap_content"

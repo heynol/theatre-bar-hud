@@ -62,12 +62,8 @@ input and restores it when you switch there:
 
 ## Remote workarounds
 
-Setup screen, section 5. All are on by default.
+Setup screen, section 5. Both are on by default.
 
-- **Undo mute from pressing "down" twice.** Xiaomi's `MitvAudioService` mutes 360 ms after two "volume down"
-  presses within 750 ms, and there is no setting for it. A report that turns mute on within 1.5 s of the volume
-  going down is undone at once (`ADJUST_UNMUTE`, again over CEC). Sound drops for about a second. The mute key
-  on its own is left alone. If you press mute right after turning the volume down, that mute is undone too.
 - **Netflix button.** Google TV remotes (e.g. from a Google TV Streamer paired to the TV) send `BUTTON_4` for
   Netflix. Xiaomi's firmware ignores it, so the service consumes it and launches `com.netflix.ninja`.
 - **Handle volume keys in this app.** Consumes volume up/down while the soundbar is active, applies them with
@@ -117,6 +113,9 @@ installing and can be switched off afterwards.
 
 ## Known limitations
 
+- **Pressing "down" twice quickly mutes** (Xiaomi's `MitvAudioService`: second press within 750 ms, mute 360 ms
+  later, no setting). Automatically unmuting was tried and removed: over CEC Android can only *toggle* mute, so
+  reacting to a stale report re-muted the soundbar and left it muted.
 - **Holding a volume key** moves the soundbar only two steps: `MitvAudioService` sends one step on key down and
   one on key up, nothing in between. Apps can't intercept these keys on the Xiaomi (see above). Repeated presses
   work normally.

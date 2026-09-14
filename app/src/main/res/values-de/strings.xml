@@ -22,8 +22,6 @@
     <string name="step_remote_title">5 · Fernbedienung</string>
     <string name="own_volume_keys_switch">Lautstärketasten von dieser App verarbeiten</string>
     <string name="own_volume_keys_body">Bei eingeschalteter Soundbar setzt diese App lauter/leiser um statt des Fernsehers. Kein versehentliches Stummschalten mehr durch zweimal schnell leiser, und gedrückt halten ändert die Lautstärke durchgehend. Stumm bleibt auf der Stumm-Taste.</string>
-    <string name="undo_double_down_mute_switch">Stumm durch zweimal leiser rückgängig machen</string>
-    <string name="undo_double_down_mute_body">Der Fernseher schaltet stumm, wenn zweimal schnell leiser gedrückt wird. Das wird sofort wieder aufgehoben; die Stumm-Taste funktioniert weiterhin.</string>
     <string name="netflix_button_switch">Netflix-Taste öffnet Netflix</string>
     <string name="netflix_button_body">Für Google-TV-Fernbedienungen, deren Netflix-Taste der Fernseher sonst ignoriert.</string>
 

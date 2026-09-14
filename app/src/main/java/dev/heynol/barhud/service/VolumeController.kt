@@ -50,14 +50,8 @@ class VolumeController(
     private var restoreJob: Job? = null
     private var reportWaiter: Pair<(VolumeState) -> Boolean, CompletableDeferred<VolumeState>>? = null
     private var restoreEndedAt = NEVER
-
-    // Last value the soundbar actually reported (unlike [state], never a prediction).
-    private var lastReported: VolumeState? = null
-    private var lastVolumeDownAt = NEVER
-
     fun start() {
         state = source.read()
-        lastReported = state
         soundbarWasActive = source.isSoundbarActive()
         source.start(::onSystemReport)
     }
@@ -205,7 +199,6 @@ class VolumeController(
             state = reported
             return
         }
-        if (undoDoubleDownMute(reported)) return
         reportWaiter?.let { (predicate, deferred) ->
             if (predicate(reported)) {
                 reportWaiter = null
@@ -224,29 +217,6 @@ class VolumeController(
             // Re-read instead of using the held report: it may predate the latest press.
             commit(source.read())
         }
-    }
-
-    /**
-     * Xiaomi's MitvAudioService mutes ~360 ms after two "down" presses within 750 ms, and there
-     * is no setting for it. A report that turns mute on shortly after the volume went down is
-     * treated as that and undone right away, without flashing the mute state on the HUD. The mute
-     * key on its own (no volume change just before) is left alone. Returns true if handled.
-     */
-    private fun undoDoubleDownMute(reported: VolumeState): Boolean {
-        val previous = lastReported
-        lastReported = reported
-        val now = SystemClock.uptimeMillis()
-        if (previous == null) return false
-        val restoring = restoreJob?.isActive == true
-        if (!restoring && !reported.muted && !previous.muted && reported.volume < previous.volume) {
-            lastVolumeDownAt = now
-        }
-        val doubleDownMute = reported.muted && !previous.muted && now - lastVolumeDownAt < DOUBLE_DOWN_MUTE_WINDOW_MS
-        if (!doubleDownMute || !remoteSettings.undoDoubleDownMute) return false
-        Log.d(TAG, "undoing Xiaomi's double-down mute")
-        lastVolumeDownAt = NEVER
-        source.unmute()
-        return true
     }
 
     private fun commit(reported: VolumeState) {
@@ -274,8 +244,5 @@ class VolumeController(
         const val RESTORE_GRACE_MS = 1_500L
         const val MAX_HOLD_STEPS = 100
         const val HOLD_STEP_MIN_INTERVAL_MS = 80L
-
-        /** Xiaomi's 750 ms double-press window + 360 ms mute timer + CEC round trips. */
-        const val DOUBLE_DOWN_MUTE_WINDOW_MS = 1_500L
     }
 }
