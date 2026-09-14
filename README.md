@@ -15,7 +15,7 @@ Remote ─► TV ──HDMI-CEC <User Control Pressed>──► Soundbar
  │        AudioService  ◄─ <Report Audio Status> ──┘   (volume 0–100 + mute bit)
  │             │ STREAM_MUSIC index for hdmi_earc
  ▼             ▼
-AudioService / VOLUME_CHANGED ──► HUD (~0.3–0.5 s after the key press)
+Accessibility key filter ──► HUD: predicted value instantly, corrected by the reported value
 ```
 
 1. **Volume source (no network).** With an eARC audio system Android 14 uses *adjust-only absolute
@@ -24,11 +24,11 @@ AudioService / VOLUME_CHANGED ──► HUD (~0.3–0.5 s after the key press)
    [`TvVolumeSource`](app/src/main/java/dev/heynol/barhud/volume/TvVolumeSource.kt) reads it through
    `AudioManager` and listens for `VOLUME_CHANGED_ACTION`. Changes made on the soundbar remote or in the
    Bravia Connect app show up as well.
-2. **Feedback timing.** On the Xiaomi, volume keys never reach
-   [`VolumeKeyService`](app/src/main/java/dev/heynol/barhud/service/VolumeKeyService.kt)'s accessibility key
-   filter: Xiaomi's `MitvAudioService` handles them earlier. So the HUD follows the soundbar's reported value,
-   ~0.3–0.5 s after a press. On devices where the filter does get the keys, the first press immediately shows
-   "last volume ± 1" and the report corrects it. While keys are still arriving, reports are held back.
+2. **Instant feedback.** [`VolumeKeyService`](app/src/main/java/dev/heynol/barhud/service/VolumeKeyService.kt)
+   is an accessibility service that filters volume up, volume down and mute (see *Remote* below for how
+   they are applied). The first press of a key immediately shows "last volume ± 1", and the value reported
+   over CEC (~0.3–0.5 s later) corrects it. While keys are still arriving, reports are held back, so the bar
+   never jumps backwards.
 3. **Soundbar only.** The HUD appears only while media audio is routed to HDMI ARC/eARC. With TV speakers
    the native HUD stays in charge.
 4. **Native look.** [`HudContent`](app/src/main/java/dev/heynol/barhud/hud/HudContent.kt) inflates TvSystemUI's
@@ -60,15 +60,20 @@ input and restores it when you switch there:
   nothing. Any volume key press cancels it, and it is skipped while muted. The HUD shows the steps.
 - The setup screen lists the stored volumes, and you can switch the feature off or forget all values.
 
-## Remote workarounds
+## Remote
 
-Setup screen, section 5. Both are on by default.
+Setup screen, section 5. Both switches are on by default.
 
+- **Handle volume keys in this app.** Xiaomi's `MitvAudioService` (in the framework's `services.jar`) handles
+  volume keys itself: a quick second "down" mutes the soundbar, and a held key only acts on a few repeats.
+  There is no setting for either. While the soundbar is active, the service consumes volume up/down in its
+  accessibility key filter and applies them with `adjustStreamVolume` instead, which uses the same CEC path.
+  A held key steps once per confirmed `<Report Audio Status>`, starting after the platform key-repeat timeout
+  and only after the first press was confirmed. Mute stays on the mute key and is passed through, and with TV
+  speakers every key is passed through.
 - **Netflix button.** Google TV remotes (e.g. from a Google TV Streamer paired to the TV) send `BUTTON_4` for
-  Netflix. Xiaomi's firmware ignores it, so the service consumes it and launches `com.netflix.ninja`.
-- **Handle volume keys in this app.** Consumes volume up/down while the soundbar is active, applies them with
-  `adjustStreamVolume` and repeats held keys one confirmed step at a time. This only works where volume keys
-  reach accessibility filters. On the tested Xiaomi they don't, so it has no effect there.
+  Netflix (`Vendor_18d1_Product_9451.kl`). Xiaomi's firmware ignores it, so the service consumes it and launches
+  `com.netflix.ninja`.
 
 ## Install
 
@@ -113,11 +118,8 @@ installing and can be switched off afterwards.
 
 ## Known limitations
 
-- **Pressing "down" twice quickly mutes** (Xiaomi's `MitvAudioService`: second press within 750 ms, mute 360 ms
-  later, no setting). Automatically unmuting was tried and removed: over CEC Android can only *toggle* mute, so
-  reacting to a stale report re-muted the soundbar and left it muted.
-- **Holding a volume key** moves the soundbar only two steps: `MitvAudioService` sends one step on key down and
-  one on key up, nothing in between. Apps can't intercept these keys on the Xiaomi (see above). Repeated presses
-  work normally.
+- **Holding a volume key** with *Handle volume keys in this app* off moves the soundbar only a couple of steps,
+  because of Xiaomi's key handling. Repeated presses work normally.
+- The remote workarounds need volume keys to reach the accessibility key filter before Xiaomi's key handling.
 - `adb shell input keyevent` bypasses accessibility filters. Injected keys still change the volume and the HUD
   follows the reported value, but without the instant prediction.
