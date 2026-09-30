@@ -11,6 +11,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -25,7 +26,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Per-input volume: whatever volume the soundbar settles at while an input is on screen is
  * remembered for that input. Switching to an input with a remembered volume walks the soundbar
  * there one CEC step at a time (absolute volume can't be set in adjust-only mode), waiting for
- * each report before the next step. Any volume key press cancels the walk.
+ * each report before the next step. Any volume change the walk didn't cause cancels it: on Xiaomi
+ * the volume keys never reach the app, so the soundbar's reports are the only sign of the user.
  *
  * Main thread only.
  */
@@ -44,8 +46,20 @@ class VolumeController(
 
     private var input: String? = null
     private var restoreJob: Job? = null
-    private var reportWaiter: Pair<(VolumeState) -> Boolean, CompletableDeferred<VolumeState>>? = null
+    private var watch: RestoreWatch? = null
+    private var takenOver = false
     private var restoreEndedAt = NEVER
+
+    /**
+     * What the running restore expects from the soundbar. Reports in [ours] are explained by the
+     * walk (repeats, stragglers), [expected] completes the current step, anything else is the user.
+     */
+    private class RestoreWatch(
+        val ours: Set<Int>,
+        val expected: Int? = null,
+        val reached: CompletableDeferred<VolumeState>? = null,
+    )
+
     fun start() {
         state = source.read()
         soundbarWasActive = source.isSoundbarActive()
@@ -71,7 +85,7 @@ class VolumeController(
         val repeat = !downKeys.add(keyCode)
         // TV speakers have their own native HUD; only stand in for the soundbar.
         if (!source.isSoundbarActive()) return
-        cancelRestore("volume key") // the user takes over
+        takeOver("volume key")
         if (repeat) {
             if (keyCode != KeyEvent.KEYCODE_VOLUME_MUTE) hud.show(state)
             return
@@ -97,9 +111,19 @@ class VolumeController(
         cancelRestore("input changed")
         if (newInput == null || !memory.enabled) return
         val target = memory[newInput] ?: return
+        takenOver = false
         restoreJob = scope.launch {
-            delay(RESTORE_DELAY_MS) // let the app or HDMI source settle; a quick zap-through restores nothing
-            restoreVolume(newInput, target)
+            val job = coroutineContext.job
+            try {
+                restoreVolume(newInput, target)
+            } finally {
+                // A restore cancelled by an input change finishes after its successor started.
+                if (restoreJob == null || restoreJob === job) {
+                    watch = null
+                    // After a takeover the user's own reports must be learned right away.
+                    restoreEndedAt = if (takenOver) NEVER else SystemClock.uptimeMillis()
+                }
+            }
         }
     }
 
@@ -108,44 +132,63 @@ class VolumeController(
     }
 
     private suspend fun restoreVolume(forInput: String, target: Int) {
-        try {
-            for (pass in 1..MAX_RESTORE_PASSES) {
-                if (!source.isSoundbarActive()) return
-                var current = source.read()
-                if (current.muted || current.volume == target) return
-                Log.d(TAG, "restoring $forInput (pass $pass): ${current.volume} -> $target")
-                var steps = 0
-                while (current.volume != target && steps++ < MAX_RESTORE_STEPS) {
-                    val before = current.volume
-                    source.adjust(if (target > before) 1 else -1)
-                    // One step at a time: wait until the soundbar reports a *changed* volume. It sends
-                    // every report twice, and sending the next step early queues presses that the
-                    // soundbar keeps applying after the target is reached.
-                    current = awaitReport { it.volume != before } ?: run {
-                        Log.d(TAG, "soundbar stopped answering at $before")
-                        return
-                    }
+        // Let the app or HDMI source settle; a quick zap-through restores nothing. Adjusting the
+        // volume meanwhile means the user has already decided.
+        watch = RestoreWatch(ours = setOf(source.read().volume))
+        delay(RESTORE_DELAY_MS)
+        for (pass in 1..MAX_RESTORE_PASSES) {
+            if (!source.isSoundbarActive()) return
+            var current = source.read()
+            if (current.muted || current.volume == target) return
+            Log.d(TAG, "restoring $forInput (pass $pass): ${current.volume} -> $target")
+            var direction = 0
+            var steps = 0
+            while (current.volume != target && steps++ < MAX_RESTORE_STEPS) {
+                val before = current.volume
+                direction = if (target > before) 1 else -1
+                // One step at a time: wait for the soundbar to report the stepped volume. It sends
+                // every report twice, and sending the next step early queues presses that the
+                // soundbar keeps applying after the target is reached.
+                val reached = CompletableDeferred<VolumeState>()
+                watch = RestoreWatch(ours = setOf(before), expected = before + direction, reached = reached)
+                source.adjust(direction)
+                current = withTimeoutOrNull(STEP_TIMEOUT_MS) { reached.await() } ?: run {
+                    Log.d(TAG, "soundbar stopped answering at $before")
+                    return
                 }
-                // Catch any late-applied step before declaring victory.
-                delay(VERIFY_DELAY_MS)
             }
-        } finally {
-            reportWaiter = null
-            restoreEndedAt = SystemClock.uptimeMillis()
+            // Catch a late-applied step before declaring victory.
+            watch = RestoreWatch(ours = setOf(target, target + direction))
+            delay(VERIFY_DELAY_MS)
         }
     }
 
-    private suspend fun awaitReport(predicate: (VolumeState) -> Boolean): VolumeState? {
-        val deferred = CompletableDeferred<VolumeState>()
-        reportWaiter = predicate to deferred
-        return withTimeoutOrNull(STEP_TIMEOUT_MS) { deferred.await() }
+    /** The user changed the volume: stop walking and learn what they chose. */
+    private fun takeOver(reason: String) {
+        if (restoreJob?.isActive != true) return
+        takenOver = true
+        cancelRestore(reason)
     }
 
     private fun cancelRestore(reason: String) {
         if (restoreJob?.isActive == true) Log.d(TAG, "restore cancelled: $reason")
         restoreJob?.cancel()
         restoreJob = null
-        reportWaiter = null
+        watch = null
+    }
+
+    private fun checkRestoreWatch(reported: VolumeState) {
+        val w = watch ?: return
+        when {
+            reported.muted -> takeOver("muted")
+            reported.volume in w.ours -> Unit
+            reported.volume == w.expected -> {
+                // Its repeat must not look like the user until the next step is under way.
+                watch = RestoreWatch(ours = w.ours + reported.volume)
+                w.reached?.complete(reported)
+            }
+            else -> takeOver("volume changed to ${reported.volume}")
+        }
     }
 
     private fun onSystemReport(reported: VolumeState) {
@@ -160,12 +203,7 @@ class VolumeController(
             state = reported
             return
         }
-        reportWaiter?.let { (predicate, deferred) ->
-            if (predicate(reported)) {
-                reportWaiter = null
-                deferred.complete(reported)
-            }
-        }
+        checkRestoreWatch(reported)
         if (SystemClock.uptimeMillis() - lastKeyAt >= SETTLE_MS) {
             commit(reported)
             return

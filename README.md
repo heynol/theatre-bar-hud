@@ -57,7 +57,10 @@ input and restores it when you switch there:
 - **Restoring:** in adjust-only absolute volume mode Android ignores `setStreamVolume`, so the controller walks
   the soundbar to the target with `adjustStreamVolume`, one CEC step at a time. Each step waits for the next
   `<Report Audio Status>` (~2–3 steps/s). The walk starts 1.5 s after the switch, so zapping through inputs changes
-  nothing. Any volume key press cancels it, and it is skipped while muted. The HUD shows the steps.
+  nothing. It is skipped while muted, and the HUD shows the steps. Volume keys never reach the app on Xiaomi, so
+  the walk watches the soundbar's reports instead: any value it didn't cause (a press in the other direction,
+  an extra step, mute, a change during the 1.5 s wait) cancels it, and that volume is learned for the input.
+  A press in the walk's own direction can't be told apart from a walk step, so it only shortens the walk.
 - The setup screen lists the stored volumes, and you can switch the feature off or forget all values.
 
 ## Remote
