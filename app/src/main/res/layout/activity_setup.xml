@@ -240,5 +240,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="@string/action_preview" />
+
+        <TextView
+            android:id="@+id/versionLabel"
+            style="@style/SetupBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textSize="13sp" />
     </LinearLayout>
 </ScrollView>

@@ -58,6 +58,9 @@ class SetupActivity : Activity() {
         inputVolumeSwitch.setOnCheckedChangeListener { _, checked -> memory.enabled = checked }
         forgetVolumesButton.setOnClickListener { memory.clear() }
 
+        findViewById<TextView>(R.id.versionLabel).text =
+            getString(R.string.version_label, packageManager.getPackageInfo(packageName, 0).versionName)
+
         findViewById<Switch>(R.id.netflixButtonSwitch).apply {
             isChecked = remoteSettings.netflixButton
             setOnCheckedChangeListener { _, checked -> remoteSettings.netflixButton = checked }
