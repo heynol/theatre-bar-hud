@@ -37,6 +37,8 @@
     <string name="action_grant">Grant</string>
     <string name="action_preview">Preview overlay</string>
 
+    <string name="version_label" translatable="false">Version %1$s</string>
+
     <string name="toast_settings_missing">This TV hides that screen. Use the adb command from the README.</string>
     <string name="toast_service_not_running">Enable volume key access first.</string>
 </resources>
