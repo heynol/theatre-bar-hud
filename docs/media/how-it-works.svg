@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">How Theatre Bar HUD works</title>
+  <desc id="desc">A volume key on the remote reaches the TV. The TV sends it to the soundbar over HDMI-CEC on the eARC port. The soundbar answers with its new volume, Android stores it as the media volume of the eARC device, and the Theatre Bar HUD app reads that value and shows it in an overlay on the right edge of the screen.</desc>
+  <style>
+    .bg { fill: #ffffff; }
+    .box { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1.5; }
+    .app { fill: #ddf4ff; stroke: #54aeff; stroke-width: 1.5; }
+    .t { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .s { fill: #59636e; font-size: 13px; }
+    .l { fill: #59636e; font-size: 12px; }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .arrow { stroke: #59636e; stroke-width: 1.8; fill: none; }
+    .head { fill: #59636e; }
+    .track { fill: #e7e7e7; }
+    .fill { fill: #0e98e8; }
+    .pill { fill: #f1f3f4; stroke: #d0d7de; }
+    .glyph { fill: #1f2328; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .box { fill: #161b22; stroke: #3d444d; }
+      .app { fill: #0c2d6b; stroke: #1f6feb; }
+      .t { fill: #f0f6fc; }
+      .s, .l { fill: #9198a1; }
+      .arrow { stroke: #9198a1; }
+      .head { fill: #9198a1; }
+      .pill { stroke: #3d444d; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path class="head" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="960" height="400" rx="12"/>
+
+  <!-- Remote -->
+  <rect class="box" x="24" y="56" width="150" height="88" rx="10"/>
+  <text class="t" x="99" y="94" text-anchor="middle">Remote</text>
+  <text class="s" x="99" y="118" text-anchor="middle">volume + / − / mute</text>
+
+  <!-- TV -->
+  <rect class="box" x="246" y="40" width="300" height="120" rx="10"/>
+  <text class="t" x="396" y="74" text-anchor="middle">Google TV (Android 14)</text>
+  <text class="s" x="396" y="100" text-anchor="middle">AudioService, adjust-only absolute volume</text>
+  <text class="s code" x="396" y="124" text-anchor="middle">STREAM_MUSIC index of hdmi_earc</text>
+
+  <!-- Soundbar -->
+  <rect class="box" x="726" y="56" width="210" height="88" rx="10"/>
+  <text class="t" x="831" y="94" text-anchor="middle">Soundbar</text>
+  <text class="s" x="831" y="118" text-anchor="middle">on HDMI eARC</text>
+
+  <!-- Remote -> TV -->
+  <path class="arrow" d="M174,100 H240" marker-end="url(#a)"/>
+
+  <!-- TV -> Soundbar (CEC key) -->
+  <path class="arrow" d="M546,82 H720" marker-end="url(#a)"/>
+  <text class="l code" x="636" y="72" text-anchor="middle">&lt;User Control Pressed&gt;</text>
+  <text class="l" x="636" y="104" text-anchor="middle">HDMI-CEC</text>
+
+  <!-- Soundbar -> TV (report) -->
+  <path class="arrow" d="M726,124 H552" marker-end="url(#a)"/>
+  <text class="l code" x="636" y="146" text-anchor="middle">&lt;Report Audio Status&gt;</text>
+  <text class="l" x="636" y="164" text-anchor="middle">volume 0–100 + mute, ~0.3–0.5 s</text>
+
+  <!-- App -->
+  <rect class="app" x="246" y="240" width="300" height="120" rx="10"/>
+  <text class="t" x="396" y="274" text-anchor="middle">Theatre Bar HUD</text>
+  <text class="s" x="396" y="298" text-anchor="middle">accessibility service, no network</text>
+  <text class="s" x="396" y="320" text-anchor="middle">reads volume + foreground package</text>
+  <text class="s" x="396" y="342" text-anchor="middle">remembers volume per app / HDMI input</text>
+
+  <!-- TV -> App -->
+  <path class="arrow" d="M396,160 V234" marker-end="url(#a)"/>
+  <text class="l code" x="406" y="196">VOLUME_CHANGED_ACTION</text>
+  <text class="l" x="406" y="214">+ AudioManager.getStreamVolume</text>
+
+  <!-- App -> Soundbar (restore walk) -->
+  <path class="arrow" d="M546,320 H831 V150" marker-end="url(#a)"/>
+  <text class="l" x="690" y="312" text-anchor="middle">restore per input: one step at a time</text>
+
+  <!-- App -> HUD -->
+  <path class="arrow" d="M246,290 H164" marker-end="url(#a)"/>
+
+  <!-- HUD mock -->
+  <g transform="translate(104 236)">
+    <rect class="pill" x="0" y="0" width="52" height="108" rx="26"/>
+    <path class="glyph" fill-rule="evenodd" transform="translate(16 10) scale(0.85)" d="M3,6.5h18a2.5,2.5 0 0 1 2.5,2.5v6a2.5,2.5 0 0 1-2.5,2.5h-18a2.5,2.5 0 0 1-2.5-2.5v-6a2.5,2.5 0 0 1 2.5-2.5z M5.5,10.4a1.6,1.6 0 1 0 0,3.2a1.6,1.6 0 1 0 0-3.2z M9.83,10.4a1.6,1.6 0 1 0 0,3.2a1.6,1.6 0 1 0 0-3.2z M14.17,10.4a1.6,1.6 0 1 0 0,3.2a1.6,1.6 0 1 0 0-3.2z M18.5,10.4a1.6,1.6 0 1 0 0,3.2a1.6,1.6 0 1 0 0-3.2z"/>
+    <rect class="track" x="23" y="36" width="6" height="46" rx="3"/>
+    <rect class="fill" x="23" y="66" width="6" height="16" rx="3"/>
+    <text x="26" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#000">24</text>
+  </g>
+  <text class="l" x="130" y="366" text-anchor="middle">HUD overlay,</text>
+  <text class="l" x="130" y="382" text-anchor="middle">right screen edge</text>
+</svg>
