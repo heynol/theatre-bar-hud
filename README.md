@@ -144,10 +144,11 @@ The HUD runs as an **accessibility service**. Turn it on once:
   settings, shows whether the soundbar is connected and has a *Preview overlay* button. In the accessibility
   settings, enable **Theatre Bar volume overlay**. If the switch is greyed out, see *Allow restricted settings*
   in [Option B](#option-b-without-a-computer).
-- **Over adb:** this appends the service to the ones already enabled instead of replacing them:
+- **Over adb:** this appends the service to the ones already enabled instead of replacing them, and does
+  nothing if it is already on:
 
   ```bash
-  adb shell 'svc=dev.heynol.barhud/.service.VolumeKeyService; cur=$(settings get secure enabled_accessibility_services); case "$cur" in *"$svc"*) ;; null|"") settings put secure enabled_accessibility_services "$svc" ;; *) settings put secure enabled_accessibility_services "$cur:$svc" ;; esac'
+  adb shell 'svc=dev.heynol.barhud/.service.VolumeKeyService; cur=$(settings get secure enabled_accessibility_services); case "$cur" in *dev.heynol.barhud/*) ;; null|"") settings put secure enabled_accessibility_services "$svc" ;; *) settings put secure enabled_accessibility_services "$cur:$svc" ;; esac'
   ```
 
 <p align="center">
