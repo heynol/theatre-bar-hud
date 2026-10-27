@@ -3,6 +3,7 @@ package dev.heynol.barhud.service
 import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
+import dev.heynol.barhud.hud.HudDemo
 import dev.heynol.barhud.hud.HudOverlay
 import dev.heynol.barhud.volume.InputVolumeMemory
 import dev.heynol.barhud.volume.TvVolumeSource
@@ -49,6 +50,7 @@ class VolumeController(
     private var watch: RestoreWatch? = null
     private var takenOver = false
     private var restoreEndedAt = NEVER
+    private var demoJob: Job? = null
 
     /**
      * What the running restore expects from the soundbar. Reports in [ours] are explained by the
@@ -70,6 +72,7 @@ class VolumeController(
         source.stop()
         settleJob?.cancel()
         restoreJob?.cancel()
+        demoJob?.cancel()
     }
 
     /**
@@ -129,6 +132,18 @@ class VolumeController(
 
     fun preview() {
         hud.show(state ?: source.read())
+    }
+
+    /** Plays [HudDemo] on the HUD. The soundbar and the remembered volumes stay untouched. */
+    fun demo(from: Int, to: Int, stepMs: Long) {
+        val range = state ?: source.read()
+        demoJob?.cancel()
+        demoJob = scope.launch {
+            for (frame in HudDemo.frames(from, to, stepMs, range.minVolume, range.maxVolume)) {
+                delay(frame.delayMs)
+                hud.show(frame.state)
+            }
+        }
     }
 
     private suspend fun restoreVolume(forInput: String, target: Int) {

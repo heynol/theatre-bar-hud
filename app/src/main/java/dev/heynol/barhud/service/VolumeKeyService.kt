@@ -131,6 +131,13 @@ class VolumeKeyService : AccessibilityService() {
             return true
         }
 
+        /** Plays the scripted demo on the HUD, see [DemoReceiver]. Returns false if the service isn't running. */
+        fun demo(from: Int, to: Int, stepMs: Long): Boolean {
+            val service = instance?.get() ?: return false
+            service.controller?.demo(from, to, stepMs) ?: return false
+            return true
+        }
+
         fun isEnabledInSettings(context: Context): Boolean {
             val expected = ComponentName(context, VolumeKeyService::class.java)
             val enabled = Settings.Secure.getString(
