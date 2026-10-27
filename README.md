@@ -24,7 +24,7 @@ marked with a soundbar icon, over every app and HDMI input.
 | Volume key → soundbar changes, screen shows nothing | Volume key → HUD on the right edge with the soundbar's level, number and mute state |
 
 <p align="center">
-  <img src="docs/media/hud.png" width="640" alt="Close-up of the HUD: soundbar icon, vertical blue bar and the number 24">
+  <img src="docs/media/hud.png" width="640" alt="The HUD on the right edge of the TV: soundbar icon, vertical blue bar and the number 24 (background blurred)">
 </p>
 
 ## Features
@@ -37,7 +37,7 @@ marked with a soundbar icon, over every app and HDMI input.
 - **Volume per input.** Remembers the volume you settle on in each app and HDMI input and restores it
   when you switch there.
 - **Optional Netflix button** mapping for Google TV remotes on Xiaomi TVs.
-- **Tiny and private**: ~230 KB, no network permission, no analytics, nothing leaves the TV.
+- **Tiny and private**: ~230 KB APK, no network permission, no analytics, nothing leaves the TV.
 
 ## Compatibility
 
@@ -175,6 +175,11 @@ and can be switched off again.
   restored 1.5 s after you switch back, one step at a time (the HUD counts along). Any volume change during
   that walk stops it and is remembered instead. The setup screen lists the stored values and lets you turn
   the feature off or forget everything.
+
+  <p align="center">
+    <img src="docs/media/per-input-restore.webp" width="640" alt="After switching to Netflix the HUD counts from 7 up to the remembered 21">
+    <br><sub>Switching to Netflix: the soundbar walks from 7 to the 21 remembered for Netflix. App content is black in screen recordings.</sub>
+  </p>
 
   <p align="center">
     <img src="docs/media/per-input.png" width="640" alt="Setup screen section 4 listing remembered volumes per app and HDMI input">
