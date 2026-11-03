@@ -30,13 +30,13 @@ marked with a soundbar icon, over every app and HDMI input.
 On the real setup, filmed with a phone (sped up 1.75×, [MP4](docs/media/setup-loop.mp4)):
 
 <p align="center">
-  <img src="docs/media/setup-loop.webp" width="640" alt="Phone video of a TV with a soundbar below it: the HUD appears on the right edge and counts up from 7 to 13, the sound is muted and unmuted, then the volume goes down to 6">
+  <img src="docs/media/setup-loop.webp" width="480" alt="Phone video of a hand pointing a remote at a TV with a soundbar below it: the HUD appears on the right edge and counts up from 7 to 12, the sound is muted and unmuted, then the volume goes down to 5">
 </p>
 
 ## Features
 
-- **Real soundbar volume** from HDMI-CEC `<Report Audio Status>`, the same value the soundbar shows on
-  its own display. Changes from the soundbar's remote or companion app show up too.
+- **Real soundbar volume** from HDMI-CEC `<Report Audio Status>`, the value the soundbar itself
+  reports. Changes from the soundbar's remote or companion app show up too.
 - **Native look.** On Xiaomi TVs the HUD is built from the TV's own TvSystemUI layout at runtime, so it
   matches the system HUD. Other TVs get an equivalent generic style.
 - **Works over everything**: home screen, streaming apps and HDMI inputs such as a game console.
@@ -238,7 +238,9 @@ and can be switched off again.
   uses window state events (package name only). Launchable TV apps count as inputs (`app:com.netflix.ninja`).
   On Xiaomi all HDMI inputs run inside the LiveTV app, so there the port comes from the `TvSourcesStatus`
   global setting (`hdmi1|HDR10` → `hdmi:hdmi1`). Overlays such as quick settings or the assistant keep the
-  current input. The home screen isn't an input, so nothing is learned or restored there.
+  current input. The home screen isn't an input, so nothing is learned or restored there. During a launch
+  the launcher often reports a window change for one of its views while the app is already on screen. Such an event
+  within 1.5 s of a switch to an app is ignored. Really going home names the launcher's activity and always counts.
 - **Learning:** every volume the soundbar settles at while an input is in front is stored for that input,
   including changes made with the soundbar remote.
 - **Restoring:** in adjust-only absolute volume mode Android ignores `setStreamVolume`, so
