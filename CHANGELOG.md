@@ -10,6 +10,8 @@ All notable changes to this project are documented here. The format follows
 
 - Volume per input: launching an app from the home screen could cancel its volume restore and leave the app
   undetected until the next switch, because of a late window event from the launcher.
+- Volume per input: switching inputs during a volume walk could learn the wrong volume for the new input,
+  because the walk's last step looked like a change made by the user.
 
 ## [1.0.0] - 2026-10-27
 

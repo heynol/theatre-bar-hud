@@ -52,16 +52,6 @@ class VolumeController(
     private var restoreEndedAt = NEVER
     private var demoJob: Job? = null
 
-    /**
-     * What the running restore expects from the soundbar. Reports in [ours] are explained by the
-     * walk (repeats, stragglers), [expected] completes the current step, anything else is the user.
-     */
-    private class RestoreWatch(
-        val ours: Set<Int>,
-        val expected: Int? = null,
-        val reached: CompletableDeferred<VolumeState>? = null,
-    )
-
     fun start() {
         state = source.read()
         soundbarWasActive = source.isSoundbarActive()
@@ -111,6 +101,7 @@ class VolumeController(
 
     fun onInputChanged(newInput: String?) {
         input = newInput
+        val cancelledWatch = watch
         cancelRestore("input changed")
         if (newInput == null || !memory.enabled) return
         val target = memory[newInput] ?: return
@@ -118,7 +109,7 @@ class VolumeController(
         restoreJob = scope.launch {
             val job = coroutineContext.job
             try {
-                restoreVolume(newInput, target)
+                restoreVolume(newInput, target, cancelledWatch)
             } finally {
                 // A restore cancelled by an input change finishes after its successor started.
                 if (restoreJob == null || restoreJob === job) {
@@ -146,10 +137,10 @@ class VolumeController(
         }
     }
 
-    private suspend fun restoreVolume(forInput: String, target: Int) {
+    private suspend fun restoreVolume(forInput: String, target: Int, cancelledWatch: RestoreWatch?) {
         // Let the app or HDMI source settle; a quick zap-through restores nothing. Adjusting the
         // volume meanwhile means the user has already decided.
-        watch = RestoreWatch(ours = setOf(source.read().volume))
+        watch = RestoreWatch.waiting(source.read().volume, cancelledWatch)
         delay(RESTORE_DELAY_MS)
         for (pass in 1..MAX_RESTORE_PASSES) {
             if (!source.isSoundbarActive()) return
@@ -194,15 +185,15 @@ class VolumeController(
 
     private fun checkRestoreWatch(reported: VolumeState) {
         val w = watch ?: return
-        when {
-            reported.muted -> takeOver("muted")
-            reported.volume in w.ours -> Unit
-            reported.volume == w.expected -> {
+        when (w.judge(reported)) {
+            RestoreWatch.Verdict.OURS -> Unit
+            RestoreWatch.Verdict.STEP_DONE -> {
                 // Its repeat must not look like the user until the next step is under way.
                 watch = RestoreWatch(ours = w.ours + reported.volume)
                 w.reached?.complete(reported)
             }
-            else -> takeOver("volume changed to ${reported.volume}")
+            RestoreWatch.Verdict.USER ->
+                takeOver(if (reported.muted) "muted" else "volume changed to ${reported.volume}")
         }
     }
 
