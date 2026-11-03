@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Volume per input: switching inputs during a volume walk could learn the wrong volume for the new input,
+  because the walk's last step looked like a change made by the user.
+
 ## [1.0.0] - 2026-10-27
 
 First public release.

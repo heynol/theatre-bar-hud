@@ -248,7 +248,8 @@ and can be switched off again.
   skipped while muted. Volume keys never reach the app on Xiaomi, so the walk watches the soundbar's reports:
   any value it didn't cause (a press in the other direction, an extra step, mute, a change during the 1.5 s
   wait) cancels it, and that volume is learned for the input. A press in the walk's own direction can't be
-  told apart from a walk step, so it only shortens the walk.
+  told apart from a walk step, so it only shortens the walk. After a switch during a walk, the wait also
+  accepts the volumes of the cancelled walk, because the step it already sent is still on its way.
 
 ### Remote and Netflix button
 
