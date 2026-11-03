@@ -4,6 +4,7 @@ import android.content.Context
 import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
@@ -26,12 +27,12 @@ class ForegroundInputTracker(
     var current: String? = null
         private set
 
-    private var foregroundPackage: String? = null
+    private val foreground = ForegroundPackage()
     private val launchableCache = HashMap<String, Boolean>()
 
     private val sourceObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
-            if (foregroundPackage == LIVE_TV_PACKAGE) update()
+            if (foreground.current == LIVE_TV_PACKAGE) update()
         }
     }
 
@@ -46,14 +47,18 @@ class ForegroundInputTracker(
     fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
-        if (pkg != foregroundPackage && (pkg in HOME_PACKAGES || isLaunchableTvApp(pkg))) {
-            foregroundPackage = pkg
+        if (pkg == foreground.current) return
+        val isHome = pkg in HOME_PACKAGES
+        if (!isHome && !isLaunchableTvApp(pkg)) return
+        if (foreground.onWindowEvent(pkg, isHome, SystemClock.uptimeMillis())) {
             update()
+        } else {
+            Log.d(TAG, "ignoring ${event.className} of $pkg: launch of ${foreground.current}")
         }
     }
 
     private fun update() {
-        val pkg = foregroundPackage
+        val pkg = foreground.current
         val input = when {
             pkg == null || pkg in HOME_PACKAGES -> null
             pkg == LIVE_TV_PACKAGE -> currentTvSource()?.let { "hdmi:$it" } ?: "app:$pkg"

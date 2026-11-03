@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Volume per input: launching an app from the home screen could cancel its volume restore and leave the app
+  undetected until the next switch, because of a late window event from the launcher.
+
 ## [1.0.0] - 2026-10-27
 
 First public release.
