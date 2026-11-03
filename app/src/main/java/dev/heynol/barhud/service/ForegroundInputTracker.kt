@@ -50,10 +50,11 @@ class ForegroundInputTracker(
         if (pkg == foreground.current) return
         val isHome = pkg in HOME_PACKAGES
         if (!isHome && !isLaunchableTvApp(pkg)) return
-        if (foreground.onWindowEvent(pkg, isHome, SystemClock.uptimeMillis())) {
+        val className = event.className?.toString()
+        if (foreground.onWindowEvent(pkg, isHome, className, SystemClock.uptimeMillis())) {
             update()
         } else {
-            Log.d(TAG, "ignoring ${event.className} of $pkg: launch of ${foreground.current}")
+            Log.d(TAG, "ignoring $className of $pkg: launch of ${foreground.current}")
         }
     }
 
