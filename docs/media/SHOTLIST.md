@@ -45,5 +45,5 @@ soundbar display won't move.
 
 ## Deliver
 
-- Original file plus a trimmed loop (`setup-loop.mp4`, H.264, 1280×720, no audio, < 5 MB).
+- Original file plus a trimmed loop (`setup-loop.mp4`, H.264, 1280×800, no audio, < 5 MB).
 - One still from the take as `setup-photo.jpg` (< 400 KB). Both go to `docs/media/`.
