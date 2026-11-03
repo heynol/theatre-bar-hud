@@ -27,6 +27,12 @@ marked with a soundbar icon, over every app and HDMI input.
   <img src="docs/media/hud.png" width="640" alt="The HUD on the right edge of the TV: soundbar icon, vertical blue bar and the number 24 (background blurred)">
 </p>
 
+On the real setup, filmed with a phone (sped up 1.75×, [MP4](docs/media/setup-loop.mp4)):
+
+<p align="center">
+  <img src="docs/media/setup-loop.webp" width="640" alt="Phone video of a TV with a soundbar below it: the HUD appears on the right edge and counts up from 7 to 13, the sound is muted and unmuted, then the volume goes down to 6">
+</p>
+
 ## Features
 
 - **Real soundbar volume** from HDMI-CEC `<Report Audio Status>`, the same value the soundbar shows on

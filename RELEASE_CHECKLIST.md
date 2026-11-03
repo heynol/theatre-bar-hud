@@ -78,6 +78,4 @@ Web UI only: *Settings → General → Social preview → Edit → Upload an ima
 
 ## Later
 
-- Phone video of the real setup following [`docs/media/SHOTLIST.md`](docs/media/SHOTLIST.md), then add it to
-  the README.
 - Portfolio section "Experiments": link the repo and use `docs/media/hero.webp` or `social-preview.png`.
