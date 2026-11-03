@@ -238,7 +238,9 @@ and can be switched off again.
   uses window state events (package name only). Launchable TV apps count as inputs (`app:com.netflix.ninja`).
   On Xiaomi all HDMI inputs run inside the LiveTV app, so there the port comes from the `TvSourcesStatus`
   global setting (`hdmi1|HDR10` → `hdmi:hdmi1`). Overlays such as quick settings or the assistant keep the
-  current input. The home screen isn't an input, so nothing is learned or restored there.
+  current input. The home screen isn't an input, so nothing is learned or restored there. During a launch
+  the launcher often reports a window change for one of its views while the app is already on screen. Such an event
+  within 1.5 s of a switch to an app is ignored. Really going home names the launcher's activity and always counts.
 - **Learning:** every volume the soundbar settles at while an input is in front is stored for that input,
   including changes made with the soundbar remote.
 - **Restoring:** in adjust-only absolute volume mode Android ignores `setStreamVolume`, so
